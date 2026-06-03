@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>作品レビュー記録</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="header-inner">
+      <div>
+        <p class="eyebrow">Private Review Log</p>
+        <h1>作品レビュー記録</h1>
+      </div>
+      <div class="header-stats" aria-live="polite">
+        <span id="reviewCount">0件</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="app-shell">
+    <section class="panel form-panel" aria-labelledby="formTitle">
+      <div class="section-head">
+        <h2 id="formTitle">レビュー入力</h2>
+        <button class="ghost-button hidden" id="cancelEditButton" type="button">編集をキャンセル</button>
+      </div>
+
+      <form id="reviewForm">
+        <input type="hidden" id="reviewId">
+
+        <div class="field-grid">
+          <label>
+            <span>作品タイトル</span>
+            <input id="title" type="text" required maxlength="120" autocomplete="off">
+          </label>
+
+          <label>
+            <span>監督の名前</span>
+            <input id="director" type="text" maxlength="80" autocomplete="off">
+          </label>
+
+          <label class="wide">
+            <span>キャッチコピー</span>
+            <input id="tagline" type="text" maxlength="160" autocomplete="off">
+          </label>
+
+          <label class="wide">
+            <span>出演者</span>
+            <input id="cast" type="text" maxlength="240" autocomplete="off">
+          </label>
+
+          <div class="rating-field">
+            <span>評価点</span>
+            <div class="rating-control">
+              <div class="stars rating-preview" id="ratingPreview" aria-label="0.0つ星">
+                <span class="star-base">★★★★★</span>
+                <span class="star-fill" style="width: 0%;">★★★★★</span>
+              </div>
+              <output id="ratingValue" for="rating ratingNumber">0.0</output>
+            </div>
+            <div class="rating-inputs">
+              <input id="rating" type="range" min="0" max="5" step="0.1" value="0">
+              <input id="ratingNumber" type="number" min="0" max="5" step="0.1" value="0.0" inputmode="decimal">
+            </div>
+          </div>
+
+          <label>
+            <span>カテゴリータグ</span>
+            <select id="category">
+              <option value="">未選択</option>
+              <option value="映画">映画</option>
+              <option value="漫画">漫画</option>
+              <option value="ドラマ">ドラマ</option>
+              <option value="アニメ">アニメ</option>
+              <option value="ゲーム">ゲーム</option>
+              <option value="小説">小説</option>
+              <option value="音楽">音楽</option>
+            </select>
+          </label>
+
+          <fieldset class="category-field wide">
+            <legend>ジャンル</legend>
+            <div class="category-options" id="genreChoices">
+              <label><input type="checkbox" value="ヒューマンドラマ">ヒューマンドラマ</label>
+              <label><input type="checkbox" value="恋愛">恋愛</label>
+              <label><input type="checkbox" value="コメディ">コメディ</label>
+              <label><input type="checkbox" value="ミステリー">ミステリー</label>
+              <label><input type="checkbox" value="サスペンス">サスペンス</label>
+              <label><input type="checkbox" value="ホラー">ホラー</label>
+              <label><input type="checkbox" value="SF">SF</label>
+              <label><input type="checkbox" value="ファンタジー">ファンタジー</label>
+              <label><input type="checkbox" value="アクション">アクション</label>
+              <label><input type="checkbox" value="アドベンチャー">アドベンチャー</label>
+              <label><input type="checkbox" value="ドキュメンタリー">ドキュメンタリー</label>
+              <label><input type="checkbox" value="音楽">音楽</label>
+              <label><input type="checkbox" value="日常">日常</label>
+              <label><input type="checkbox" value="青春">青春</label>
+            </div>
+          </fieldset>
+
+          <label class="wide">
+            <span>文章コメント</span>
+            <textarea id="comment" rows="6" maxlength="2000"></textarea>
+          </label>
+        </div>
+
+        <div class="form-actions">
+          <button class="primary-button" id="submitButton" type="submit">登録する</button>
+          <button class="secondary-button" id="resetButton" type="reset">入力を消す</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="panel filters-panel" aria-labelledby="filterTitle">
+      <div class="section-head">
+        <h2 id="filterTitle">検索・絞り込み</h2>
+        <button class="ghost-button" id="clearFiltersButton" type="button">条件をクリア</button>
+      </div>
+
+      <div class="filters-grid">
+        <label>
+          <span>キーワード検索</span>
+          <input id="keywordFilter" type="search" placeholder="タイトル、監督、出演者、カテゴリー、ジャンル、コメント">
+        </label>
+
+        <label>
+          <span>星評価</span>
+          <select id="ratingFilter">
+            <option value="">すべて</option>
+            <option value="5">5.0以上</option>
+            <option value="4">4.0以上</option>
+            <option value="3">3.0以上</option>
+            <option value="2">2.0以上</option>
+            <option value="1">1.0以上</option>
+            <option value="0">未評価</option>
+          </select>
+        </label>
+
+        <label>
+          <span>ジャンル</span>
+          <select id="genreFilter">
+            <option value="">すべて</option>
+          </select>
+        </label>
+
+        <label>
+          <span>カテゴリー</span>
+          <select id="tagFilter">
+            <option value="">すべて</option>
+          </select>
+        </label>
+      </div>
+    </section>
+
+    <section class="reviews-section" aria-labelledby="listTitle">
+      <div class="section-head list-head">
+        <h2 id="listTitle">レビュー一覧</h2>
+        <span id="filteredCount" class="muted"></span>
+      </div>
+      <div id="reviewList" class="review-list"></div>
+      <p id="emptyMessage" class="empty-message hidden">条件に合うレビューがありません。</p>
+    </section>
+  </main>
+
+  <script src="app.js?v=20260603-edit-after-update-fix"></script>
+</body>
+</html>

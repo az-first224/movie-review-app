@@ -83,16 +83,35 @@ h2 {
 }
 
 .header-stats {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 0 0 auto;
+  color: var(--accent-strong);
+  font-weight: 700;
+}
+
+.header-stats > span {
   display: grid;
   place-items: center;
   width: 86px;
   height: 86px;
-  flex: 0 0 auto;
   border: 1px solid var(--line);
   border-radius: 50%;
-  color: var(--accent-strong);
   background: rgba(0, 0, 0, 0.18);
-  font-weight: 700;
+}
+
+.header-logout {
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--text);
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.header-logout:hover {
+  border-color: var(--accent);
+  color: var(--accent-strong);
 }
 
 .app-shell {
@@ -401,6 +420,10 @@ input[type="range"] {
   }
 
   .header-stats {
+    gap: 8px;
+  }
+
+  .header-stats > span {
     width: 70px;
     height: 70px;
   }

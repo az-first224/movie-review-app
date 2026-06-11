@@ -42,7 +42,8 @@ const elements = {
   emptyMessage: document.querySelector("#emptyMessage"),
   reviewCount: document.querySelector("#reviewCount"),
   filteredCount: document.querySelector("#filteredCount"),
-  formTitle: document.querySelector("#formTitle")
+  formTitle: document.querySelector("#formTitle"),
+  siteLogoutButton: document.querySelector("#siteLogoutButton")
 };
 
 let reviews = [];
@@ -446,6 +447,16 @@ function clearFilters() {
   renderReviews();
 }
 
+async function logoutSite() {
+  elements.siteLogoutButton.disabled = true;
+
+  try {
+    await fetch("/api/auth", { method: "DELETE" });
+  } finally {
+    window.location.replace("/login.html");
+  }
+}
+
 elements.rating.addEventListener("input", () => updateRatingInput(elements.rating.value));
 elements.ratingNumber.addEventListener("input", () => {
   if (elements.ratingNumber.value === "") return;
@@ -462,6 +473,7 @@ elements.keywordFilter.addEventListener("input", renderReviews);
 elements.ratingFilter.addEventListener("change", renderReviews);
 elements.genreFilter.addEventListener("change", renderReviews);
 elements.tagFilter.addEventListener("change", renderReviews);
+elements.siteLogoutButton.addEventListener("click", logoutSite);
 
 renderGenreOptions();
 renderTagOptions();

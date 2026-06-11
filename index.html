@@ -8,22 +8,28 @@
 </head>
 <body>
   <header class="app-header">
+    <div class="marquee-lights" aria-hidden="true"></div>
     <div class="header-inner">
-      <div>
-        <p class="eyebrow">Private Review Log</p>
+      <div class="theater-title">
+        <p class="eyebrow">The Grand Picture House</p>
         <h1>作品レビュー記録</h1>
+        <p class="header-copy">Now showing memories, favorites &amp; timeless classics</p>
       </div>
       <div class="header-stats" aria-live="polite">
-        <span id="reviewCount">0件</span>
+        <span class="count-ticket"><small>ARCHIVE</small><strong id="reviewCount">0件</strong></span>
         <button class="header-logout" id="siteLogoutButton" type="button">ログアウト</button>
       </div>
     </div>
+    <div class="marquee-lights" aria-hidden="true"></div>
   </header>
 
   <main class="app-shell">
     <section class="panel form-panel" aria-labelledby="formTitle">
       <div class="section-head">
-        <h2 id="formTitle">レビュー入力</h2>
+        <div>
+          <p class="section-kicker">Box Office Notes</p>
+          <h2 id="formTitle">レビュー入力</h2>
+        </div>
         <button class="ghost-button hidden" id="cancelEditButton" type="button">編集をキャンセル</button>
       </div>
 
@@ -116,7 +122,10 @@
 
     <section class="panel filters-panel" aria-labelledby="filterTitle">
       <div class="section-head">
-        <h2 id="filterTitle">検索・絞り込み</h2>
+        <div>
+          <p class="section-kicker">Programme Search</p>
+          <h2 id="filterTitle">検索・絞り込み</h2>
+        </div>
         <button class="ghost-button" id="clearFiltersButton" type="button">条件をクリア</button>
       </div>
 
@@ -157,13 +166,22 @@
 
     <section class="reviews-section" aria-labelledby="listTitle">
       <div class="section-head list-head">
-        <h2 id="listTitle">レビュー一覧</h2>
+        <div>
+          <p class="section-kicker">Tonight's Programme</p>
+          <h2 id="listTitle">レビュー一覧</h2>
+        </div>
         <span id="filteredCount" class="muted"></span>
       </div>
       <div id="reviewList" class="review-list"></div>
       <p id="emptyMessage" class="empty-message hidden">条件に合うレビューがありません。</p>
     </section>
   </main>
+
+  <footer class="site-footer">
+    <span>ADMIT ONE</span>
+    <p>The Grand Picture House · Review Archive</p>
+    <span>EST. 2026</span>
+  </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>

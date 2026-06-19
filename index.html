@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <title>作品レビュー記録</title>
   <link rel="stylesheet" href="styles.css">
 </head>
@@ -40,6 +41,11 @@
           <label>
             <span>作品タイトル</span>
             <input id="title" type="text" required maxlength="120" autocomplete="off">
+          </label>
+
+          <label>
+            <span>作品日付</span>
+            <input id="releaseDate" type="date">
           </label>
 
           <label>
@@ -116,7 +122,7 @@
 
         <div class="form-actions">
           <button class="primary-button" id="submitButton" type="submit">登録する</button>
-          <button class="secondary-button" id="resetButton" type="reset">入力を消す</button>
+          <button class="secondary-button" id="resetButton" type="button">入力を消す</button>
         </div>
       </form>
     </section>
@@ -175,6 +181,11 @@
       </div>
       <div id="reviewList" class="review-list"></div>
       <p id="emptyMessage" class="empty-message hidden">条件に合うレビューがありません。</p>
+      <nav id="pagination" class="pagination hidden" aria-label="レビュー一覧のページ送り">
+        <button class="secondary-button" id="previousPageButton" type="button">前へ</button>
+        <span id="pageStatus" class="muted" aria-live="polite"></span>
+        <button class="secondary-button" id="nextPageButton" type="button">次へ</button>
+      </nav>
     </section>
   </main>
 
@@ -186,6 +197,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
-  <script src="app.js?v=20260611-site-auth"></script>
+  <script src="app.js?v=20260615-release-date"></script>
 </body>
 </html>

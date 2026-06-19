@@ -16,11 +16,13 @@ const GENRES = [
   "青春",
   "スポーツ"
 ];
+const REVIEWS_PER_PAGE = 10;
 
 const elements = {
   form: document.querySelector("#reviewForm"),
   reviewId: document.querySelector("#reviewId"),
   title: document.querySelector("#title"),
+  releaseDate: document.querySelector("#releaseDate"),
   director: document.querySelector("#director"),
   tagline: document.querySelector("#tagline"),
   cast: document.querySelector("#cast"),
@@ -41,6 +43,10 @@ const elements = {
   clearFiltersButton: document.querySelector("#clearFiltersButton"),
   reviewList: document.querySelector("#reviewList"),
   emptyMessage: document.querySelector("#emptyMessage"),
+  pagination: document.querySelector("#pagination"),
+  previousPageButton: document.querySelector("#previousPageButton"),
+  pageStatus: document.querySelector("#pageStatus"),
+  nextPageButton: document.querySelector("#nextPageButton"),
   reviewCount: document.querySelector("#reviewCount"),
   filteredCount: document.querySelector("#filteredCount"),
   formTitle: document.querySelector("#formTitle"),
@@ -49,6 +55,7 @@ const elements = {
 
 let reviews = [];
 let supabaseClient = null;
+let currentPage = 1;
 
 function getSupabaseConfig() {
   return window.REVIEW_APP_SUPABASE || {};
@@ -81,6 +88,8 @@ function normalizeReview(row) {
   return {
     id: source.id || "",
     title: source.title || "",
+    releaseDate: normalizeDate(source.release_date ?? source.releaseDate),
+    releaseYear: normalizeYear(source.release_year ?? source.releaseYear),
     director: source.director || "",
     tagline: source.tagline || "",
     cast: source.cast_names || source.cast || "",
@@ -108,6 +117,7 @@ function normalizeGenres(review) {
 function toSupabasePayload() {
   return {
     title: normalizeText(elements.title.value),
+    release_date: normalizeDate(elements.releaseDate.value),
     director: normalizeText(elements.director.value),
     tagline: normalizeText(elements.tagline.value),
     cast_names: normalizeText(elements.cast.value),
@@ -120,6 +130,29 @@ function toSupabasePayload() {
 
 function normalizeText(value) {
   return value.trim();
+}
+
+function normalizeYear(value) {
+  if (value === "" || value === null || value === undefined) return null;
+
+  const year = Number(value);
+  return Number.isInteger(year) && year >= 1 && year <= 9999 ? year : null;
+}
+
+function normalizeDate(value) {
+  if (!value) return null;
+
+  const date = String(value).slice(0, 10);
+  return /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : null;
+}
+
+function formatReleaseDate(review) {
+  if (review.releaseDate) {
+    const [year, month, day] = review.releaseDate.split("-");
+    return `${year}年${Number(month)}月${Number(day)}日`;
+  }
+
+  return review.releaseYear ? `${review.releaseYear}年` : "未入力";
 }
 
 function normalizeRating(value) {
@@ -208,6 +241,8 @@ function getFilteredReviews() {
     .filter((review) => {
       const searchable = [
         review.title,
+        review.releaseDate,
+        review.releaseYear,
         review.director,
         review.cast,
         review.category,
@@ -224,7 +259,10 @@ function getFilteredReviews() {
 
       return matchesKeyword && matchesRating && matchesGenre && matchesCategory;
     })
-    .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+    .sort((a, b) => {
+      const updatedDifference = new Date(b.updatedAt) - new Date(a.updatedAt);
+      return updatedDifference || new Date(b.createdAt) - new Date(a.createdAt);
+    });
 }
 
 function renderGenreOptions() {
@@ -261,13 +299,23 @@ function renderTagOptions() {
 
 function renderReviews() {
   const filtered = getFilteredReviews();
+  const totalPages = Math.max(1, Math.ceil(filtered.length / REVIEWS_PER_PAGE));
+  currentPage = Math.min(currentPage, totalPages);
+  const pageStart = (currentPage - 1) * REVIEWS_PER_PAGE;
+  const pageReviews = filtered.slice(pageStart, pageStart + REVIEWS_PER_PAGE);
 
   elements.reviewCount.textContent = `${reviews.length}件`;
-  elements.filteredCount.textContent = `${filtered.length}件表示`;
+  elements.filteredCount.textContent = filtered.length
+    ? `${pageStart + 1}〜${pageStart + pageReviews.length}件 / 全${filtered.length}件`
+    : "0件表示";
   elements.emptyMessage.classList.toggle("hidden", filtered.length > 0);
+  elements.pagination.classList.toggle("hidden", filtered.length <= REVIEWS_PER_PAGE);
+  elements.previousPageButton.disabled = currentPage === 1;
+  elements.nextPageButton.disabled = currentPage === totalPages;
+  elements.pageStatus.textContent = `${currentPage} / ${totalPages}ページ`;
   elements.reviewList.innerHTML = "";
 
-  filtered.forEach((review) => {
+  pageReviews.forEach((review) => {
     const article = document.createElement("article");
     article.className = "review-card";
     article.innerHTML = `
@@ -279,6 +327,7 @@ function renderReviews() {
         </div>
         ${review.tagline ? `<p class="tagline">${escapeHtml(review.tagline)}</p>` : ""}
         <div class="meta-grid">
+          <div>作品日付: ${escapeHtml(formatReleaseDate(review))}</div>
           <div>監督: ${escapeHtml(review.director || "未入力")}</div>
           <div>出演者: ${escapeHtml(review.cast || "未入力")}</div>
           <div>カテゴリー: ${escapeHtml(review.category || "未選択")}</div>
@@ -311,12 +360,14 @@ function renderReviews() {
 function renderLoadingMessage() {
   elements.reviewList.innerHTML = '<p class="empty-message">Supabaseから読み込み中です。</p>';
   elements.emptyMessage.classList.add("hidden");
+  elements.pagination.classList.add("hidden");
 }
 
 function renderSetupMessage() {
   elements.reviewCount.textContent = "0件";
   elements.filteredCount.textContent = "";
   elements.emptyMessage.classList.add("hidden");
+  elements.pagination.classList.add("hidden");
   elements.reviewList.innerHTML = `
     <p class="empty-message">
       Supabase設定がありません。READMEを参考に supabase-config.js を作成してください。
@@ -325,6 +376,7 @@ function renderSetupMessage() {
 }
 
 function renderErrorMessage(error) {
+  elements.pagination.classList.add("hidden");
   elements.reviewList.innerHTML = `
     <p class="empty-message">
       データの読み込みに失敗しました。Supabase設定、SQL、RLSポリシーを確認してください。<br>
@@ -334,9 +386,14 @@ function renderErrorMessage(error) {
   elements.emptyMessage.classList.add("hidden");
 }
 
-function resetForm() {
-  elements.form.reset();
+function resetFormState() {
   elements.reviewId.value = "";
+  elements.title.value = "";
+  elements.releaseDate.value = "";
+  elements.director.value = "";
+  elements.tagline.value = "";
+  elements.cast.value = "";
+  elements.comment.value = "";
   elements.submitButton.textContent = "登録する";
   elements.cancelEditButton.classList.add("hidden");
   elements.formTitle.textContent = "レビュー入力";
@@ -345,11 +402,17 @@ function resetForm() {
   setSelectedGenres([]);
 }
 
+function resetForm() {
+  setFormDisabled(false);
+  resetFormState();
+}
+
 function fillForm(review) {
   const normalized = normalizeReview(review);
 
   elements.reviewId.value = normalized.id;
   elements.title.value = normalized.title;
+  elements.releaseDate.value = normalized.releaseDate ?? "";
   elements.director.value = normalized.director;
   elements.tagline.value = normalized.tagline;
   elements.cast.value = normalized.cast;
@@ -372,7 +435,8 @@ async function loadReviews() {
   const { data, error } = await supabaseClient
     .from("review_records")
     .select("*")
-    .order("updated_at", { ascending: false });
+    .order("updated_at", { ascending: false })
+    .order("created_at", { ascending: false });
 
   if (error) {
     renderErrorMessage(error);
@@ -393,20 +457,27 @@ async function handleSubmit(event) {
 
   setBusy(true);
 
-  const response = id
-    ? await supabaseClient
-      .from("review_records")
-      .update(payload)
-      .eq("id", id)
-      .select()
-      .single()
-    : await supabaseClient
-      .from("review_records")
-      .insert(payload)
-      .select()
-      .single();
+  let response;
 
-  setBusy(false);
+  try {
+    response = id
+      ? await supabaseClient
+        .from("review_records")
+        .update(payload)
+        .eq("id", id)
+        .select()
+        .single()
+      : await supabaseClient
+        .from("review_records")
+        .insert(payload)
+        .select()
+        .single();
+  } catch (error) {
+    alert(`保存に失敗しました: ${error.message || String(error)}`);
+    return;
+  } finally {
+    setBusy(false);
+  }
 
   if (response.error) {
     alert(`保存に失敗しました: ${response.error.message}`);
@@ -414,7 +485,9 @@ async function handleSubmit(event) {
   }
 
   resetForm();
+  currentPage = 1;
   await loadReviews();
+  elements.title.focus();
 }
 
 async function deleteReview(review) {
@@ -445,7 +518,19 @@ function clearFilters() {
   elements.ratingFilter.value = "";
   elements.genreFilter.value = "";
   elements.tagFilter.value = "";
+  currentPage = 1;
   renderReviews();
+}
+
+function resetPageAndRender() {
+  currentPage = 1;
+  renderReviews();
+}
+
+function changePage(offset) {
+  currentPage += offset;
+  renderReviews();
+  document.querySelector("#listTitle").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 async function logoutSite() {
@@ -465,15 +550,15 @@ elements.ratingNumber.addEventListener("input", () => {
 });
 
 elements.form.addEventListener("submit", handleSubmit);
-elements.form.addEventListener("reset", () => {
-  setTimeout(resetForm, 0);
-});
+elements.resetButton.addEventListener("click", resetForm);
 elements.cancelEditButton.addEventListener("click", resetForm);
 elements.clearFiltersButton.addEventListener("click", clearFilters);
-elements.keywordFilter.addEventListener("input", renderReviews);
-elements.ratingFilter.addEventListener("change", renderReviews);
-elements.genreFilter.addEventListener("change", renderReviews);
-elements.tagFilter.addEventListener("change", renderReviews);
+elements.keywordFilter.addEventListener("input", resetPageAndRender);
+elements.ratingFilter.addEventListener("change", resetPageAndRender);
+elements.genreFilter.addEventListener("change", resetPageAndRender);
+elements.tagFilter.addEventListener("change", resetPageAndRender);
+elements.previousPageButton.addEventListener("click", () => changePage(-1));
+elements.nextPageButton.addEventListener("click", () => changePage(1));
 elements.siteLogoutButton.addEventListener("click", logoutSite);
 
 renderGenreOptions();

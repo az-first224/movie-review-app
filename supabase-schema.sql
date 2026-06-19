@@ -3,6 +3,8 @@ create extension if not exists pgcrypto;
 create table if not exists public.review_records (
   id uuid primary key default gen_random_uuid(),
   title text not null,
+  release_date date,
+  release_year integer check (release_year between 1 and 9999),
   director text not null default '',
   tagline text not null default '',
   cast_names text not null default '',
@@ -30,6 +32,27 @@ create table if not exists public.review_records (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.review_records
+add column if not exists release_year integer;
+
+alter table public.review_records
+add column if not exists release_date date;
+
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_constraint
+    where conname = 'review_records_release_year_check'
+      and conrelid = 'public.review_records'::regclass
+  ) then
+    alter table public.review_records
+    add constraint review_records_release_year_check
+    check (release_year between 1 and 9999);
+  end if;
+end;
+$$;
 
 create or replace function public.set_review_records_updated_at()
 returns trigger
@@ -79,11 +102,13 @@ to anon
 using (true);
 
 insert into public.review_records
-  (id, title, director, tagline, cast_names, rating, category, genres, comment)
+  (id, title, release_date, release_year, director, tagline, cast_names, rating, category, genres, comment)
 values
   (
     '11111111-1111-4111-8111-111111111111',
     '静かな軌道',
+    '2024-06-14',
+    2024,
     '青井 真',
     '孤独な宇宙船で、記憶だけが灯りになる。',
     '水原 凛, 高瀬 航',
@@ -95,6 +120,8 @@ values
   (
     '22222222-2222-4222-8222-222222222222',
     '路地裏の季節',
+    '2022-10-08',
+    2022,
     '北村 遥',
     '変わらない街で、変わっていく人たち。',
     '佐伯 奈緒, 三浦 圭',
@@ -106,6 +133,8 @@ values
   (
     '33333333-3333-4333-8333-333333333333',
     'フレームの向こう側',
+    '2025-02-21',
+    2025,
     '西園 透',
     '撮ることは、見つめ直すこと。',
     '語り: 西園 透',
